@@ -4,35 +4,73 @@
  * @maresc at Github
  * 
  * Cration day : 06/20/2023 - 10:00am (MM/DD/YYYY)
- * Last update : 06/20/2023 - 00:00am (MM/DD/YYYY)
+ * Last update : 06/26/2023 - 00:00am (MM/DD/YYYY)
 */
 
 #include "pushbutton.h"
+#include <Adafruit_GFX.h>
+#include <Adafruit_GrayOLED.h>
+#include <Adafruit_SPITFT.h>
+#include <Adafruit_SPITFT_Macros.h>
+#include <gfxfont.h>
+#include <Adafruit_ST7735.h>          // Library for de LCD Screen TFT 128*128 by Adafruit
+#include <Adafruit_ST7789.h>
+#include <Adafruit_ST77xx.h>
+
+#include "screen.h"
 
 /**************************************************************************/
 /***************            GLOBAL VALUE & PINS             ***************/ 
 /**************************************************************************/
-// PIN DEFFINITION 
-  // INPUT 
-    #define BP1_IN          7
-    #define BP2_IN          6
-    #define BP3_IN          5
+// PIN DEFFINITION : 
+  // ARDUINO UNO  
+    // INPUT 
+      /*
+      #define BP1_IN          7
+      #define BP2_IN          6
+      #define BP3_IN          5
 
-    #define CURRENT1_IN     A0
-    #define CURRENT2_IN     A1
-    #define CURRENT3_IN     A2
+      #define CURRENT1_IN     A0
+      #define CURRENT2_IN     A1
+      #define CURRENT3_IN     A2
 
-    #define POTEN_IN        A3
+      #define POTEN_IN        A3
 
-  // OUTPUT
-    #define WIRE1_OUT       11
-    #define WIRE2_OUT       10
-    #define WIRE3_OUT       9
+    // OUTPUT
+      #define WIRE1_OUT       11
+      #define WIRE2_OUT       10
+      #define WIRE3_OUT       9
 
-    #define WIRE1LED_OUT    13
-    #define WIRE2LED_OUT    12
-    #define WIRE3LED_OUT    8
+      #define WIRE1LED_OUT    13
+      #define WIRE2LED_OUT    12
+      #define WIRE3LED_OUT    8
+    */  
+  //
+  // ARDUINO ATMEGA
+    // INPUT
+      #define BP1_IN          22
+      #define BP2_IN          24
+      #define BP3_IN          26
+      
+      #define POTEN_IN        A0
 
+      #define CURRENT1_IN     A1
+      #define CURRENT2_IN     A2
+      #define CURRENT3_IN     A3
+
+    // OUTPUT
+      #define WIRE1_OUT       46
+      #define WIRE2_OUT       45
+      #define WIRE3_OUT       44
+
+      #define WIRE1LED_OUT    37
+      #define WIRE2LED_OUT    41
+      #define WIRE3LED_OUT    43
+
+      #define SERVOW1_OUT     5
+      #define SERVOW2_OUT     6
+      #define SERVOW2_OUT     7
+  //
 
 // GLOBALE VALUE
 
@@ -40,7 +78,7 @@
 /***************         GLOBAL VARIABLE DECLARATION        ***************/ 
 /**************************************************************************/
 // Variable for fonctions of push-buttons
-  pushbutton pushbutton(BP1_IN, BP1_IN, BP1_IN, 50); 
+  pushbutton pushbutton(BP1_IN, BP2_IN, BP3_IN, 50); 
 
   int wire1carac[] = {0,0}; 
   int wire2carac[] = {0,0}; 
@@ -76,6 +114,40 @@ void affichage_debug(int wire, int wires, int current1, int current2, int curren
   Serial.println("      \n\n"); 
 }
 
+int j = 0; 
+
+void set_wireled(int wa){
+  switch(wa){
+    case 1 : 
+      digitalWrite(WIRE1LED_OUT, 1);
+      digitalWrite(WIRE2LED_OUT, 0);
+      digitalWrite(WIRE3LED_OUT, 0);
+      break; 
+    case 2 : 
+      digitalWrite(WIRE1LED_OUT, 0);
+      digitalWrite(WIRE2LED_OUT, 1);
+      digitalWrite(WIRE3LED_OUT, 0);
+      break; 
+    case 3 : 
+      digitalWrite(WIRE1LED_OUT, 0);
+      digitalWrite(WIRE2LED_OUT, 0);
+      digitalWrite(WIRE3LED_OUT, 1);
+      break; 
+    default : 
+      j++; 
+      if(j == 500){
+        digitalWrite(WIRE1LED_OUT, 1);
+        digitalWrite(WIRE2LED_OUT, 1);
+        digitalWrite(WIRE3LED_OUT, 1);}
+      
+      else if (j == 1000){
+        digitalWrite(WIRE1LED_OUT, 0);
+        digitalWrite(WIRE2LED_OUT, 0);
+        digitalWrite(WIRE3LED_OUT, 0);
+        j = 0; 
+      }
+  }
+}
 
 /**************************************************************************/
 /***************            SETUP & LOOP PROGRAM            ***************/ 
@@ -95,7 +167,7 @@ void setup() {
 
   pushbutton.init_pushButtons(); 
 
-  poten_ni  = digitalRead(POTEN_IN);
+  poten_ni  = analogRead(POTEN_IN);
 }
 
 int cpt = 0; 
@@ -106,9 +178,9 @@ int vpo = 0;
 void loop() {
 
   // JUST FOR DEBUUG 
-  pw1 = random(0, 1023); 
-  pw2 = random(0, 1023); 
-  pw3 = random(0, 1023); 
+  //pw1 = random(0, 1023); 
+  //pw2 = random(0, 1023); 
+  //pw3 = random(0, 1023); 
 
   
   cw1 = random(0, 5000); 
@@ -121,6 +193,17 @@ void loop() {
   // POTENTIOMETER -- reading analogic value
   poten_oi = poten_ni; 
   poten_ni = analogRead(POTEN_IN); 
+  switch(wireactive){
+    case 1 : 
+      pw1 = poten_ni; break;  
+
+    case 2 :
+      pw2 = poten_ni; break; 
+    case 3 : 
+      pw3 = poten_ni; break; 
+    default : 
+      break; 
+  }
 
   // PUSH-BUTTON ONE -- Cable increment launched 
   wireselect = pushbutton.set_wireselect(wireselect);
@@ -132,18 +215,18 @@ void loop() {
   if(pushbutton.saveButtonActive() == 1){
     switch(wireactive){
       case 1: 
-        wire1carac[0] = pw1; 
-        wire1carac[1] = cw1; 
+        wire1carac[1] = pw1; 
+        wire1carac[0] = cw1; 
         break; 
       
       case 2:
-        wire2carac[0] = pw2; 
-        wire2carac[1] = cw2; 
+        wire2carac[1] = pw2; 
+        wire2carac[0] = cw2; 
         break; 
       
       case 3: 
-        wire3carac[0] = pw3; 
-        wire3carac[1] = cw3; 
+        wire3carac[1] = pw3; 
+        wire3carac[0] = cw3; 
         break; 
       
       default: 
@@ -151,7 +234,7 @@ void loop() {
     } 
   }
   
-
+  set_wireled(wireactive); // activation des leds
 
   /***************************/
   /***    OUTPUT ACTION    ***/
@@ -193,7 +276,7 @@ void loop() {
   /***************************/
   /***        DEBUGG       ***/
   /***************************/
-  if( i == 100){
+  if( i == 1000){
     i = 0; 
     affichage_debug(wireactive, wireselect, wire1carac[0], wire2carac[0], wire3carac[0], wire1carac[1], wire2carac[1], wire3carac[1]); 
     Serial.println(cpt + "\n\n");
