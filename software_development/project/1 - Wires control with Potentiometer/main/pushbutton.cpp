@@ -19,8 +19,9 @@ pushbutton::pushbutton(int PB1_IN, int PB2_IN, int PB3_IN, int rebounds){
   _BP_BOUNCE = rebounds;  
 }
 
-/** Function to initiate pin initalization for all three pushbuttons
- *    
+/** @brief Function to initiate pin initalization for all three pushbuttons
+ *    no @param 
+ *    no @return 
  */
 void pushbutton::init_pushButtons(){
   pinMode(_BP1_IN, INPUT);
@@ -30,17 +31,17 @@ void pushbutton::init_pushButtons(){
   _bp1_oi    = digitalRead(_BP1_IN); 
   _bp2_oi    = digitalRead(_BP2_IN); 
   _bp3_oi    = digitalRead(_BP3_IN); 
-
-  Serial.println("Push-buttons are initialized"); 
+  Serial.println("    >> PUSH BUTTON INITIALIZATION : APPROVED"); 
 }
 
-/** Increases the number of the selected wire each time the n°1 push-button is pressed.
+/** @brief Increases the number of the selected wire each time the n°1 push-button is pressed.
  *      @param  wiresel -- The number of the currently selected wire
  *      @return output  -- The new wire selected
  */ 
 int pushbutton::set_wireselect(int wiresel){
   int output = wiresel; 
   bool _bp1_ni = digitalRead (_BP1_IN);
+
   // If a change in push-button status is detected 
   if(_bp1_oi != _bp1_ni) {        
 
@@ -103,13 +104,13 @@ bool pushbutton::saveButtonActive(){
     // If the nw value of push-button is 1 (= PRESSED)
     if(_bp3_ni == true){        
       delay(_BP_BOUNCE);                     //  We wait for the configuree time to secure the rebound values.
-      return 0; 
     }
 
     // If the nw value of push-button is 0 (= RELEASED)
     else if(_bp3_ni == false){
-      return 1; 
+      return true; 
     }             
     _bp3_oi = _bp3_ni;                          //  Set bp3_oi to the current value for the next loop 
   } 
+  return false; 
 }

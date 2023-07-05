@@ -24,9 +24,19 @@
 #include <SPI.h>
 
 
+
 void init_screen(); 
 void set_fixPrint(); 
-void set_clearAllData(uint16_t color); 
+void set_clearAllData(uint16_t color = ST77XX_BLACK); 
 void testdrawtext(char *text, uint16_t color, int x, int y); 
+
+void set_clearWireData(int choice);
+void set_writeWireData(bool act, int active, int select);
+
+void set_clearCurrentData(); 
+void set_writeCurrentData(bool act, int current, int poten); 
+
+void set_clearSaveData(int choice); 
+void set_writeSaveData(bool act, int activew, int current, int poten); 
 
 #endif
